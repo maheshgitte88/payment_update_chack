@@ -6,6 +6,7 @@ const Greayquest = require('../Models/Greayquest');
 const IciciBankStatment = require('../Models/IciciBankStatment');
 const sequelize = require('../config');
 const { literal } = require('sequelize');
+const FeeFromLoanTracker = require('../Models/FeeFromLoanTracker');
 
 
 // Define your routes using the Student model
@@ -150,6 +151,68 @@ router.get('/perform-operations', async (req, res) => {
 // });
 
 
+async function saveCombinedDataToDatabase(data) {
+    try {
+        for (const item of data) {
+            if (item.matchingStatements.length > 0) {
+                console.log(item.utr, item.matchingStatements[0].tranId, 128);
+                const [FeeFromLoanTrackerInstance, created] = await FeeFromLoanTracker.findOrCreate({
+                    where: {Bank_tranId: item.matchingStatements[0].tranId },
+                    defaults: {
+                        date_of_Payment: item.disbursementDate,
+                        mode_of_payment: 'Loan',
+                        MITSDE_Bank_Name: `${item.bankName} ${item.accountNumber}`,
+                        instrument_No: item.utr,
+                        amount: item.matchingStatements[0].depositAmt,
+                        clearance_Date: item.matchingStatements[0].transactionDate,
+                        student_Name: item.studentName,
+                        student_Email_ID: item.studentId,
+                        course_Name:item.board,
+                        finance_charges: item.discountAmount,
+                        Bank_tranId: item.matchingStatements[0].tranId,
+                        transactionRemarks: item.matchingStatements[0].transactionRemarks,
+                    },
+                });
+
+                if (created) {
+                    console.log('New CombinedData instance created:', FeeFromLoanTrackerInstance.get());
+                } else {
+                    console.log('CombinedData instance already exists:', FeeFromLoanTrackerInstance.get());
+                }
+            }else{
+                const [FeeFromLoanTrackerInstance, created] = await FeeFromLoanTracker.findOrCreate({
+                    where: { instrument_No: item.utr },
+                    defaults: {
+                        date_of_Payment: item.disbursementDate,
+                        mode_of_payment: 'Loan',
+                        MITSDE_Bank_Name: `${item.bankName} ${item.accountNumber}`,
+                        instrument_No: item.utr,
+                        // amount: item.matchingStatements[0].depositAmt,
+                        // clearance_Date: item.matchingStatements[0].transactionDate,
+                        student_Name: item.studentName,
+                        student_Email_ID: item.studentId,
+                        course_Name:item.board,
+                        finance_charges: item.discountAmount,
+                        // Bank_tranId: item.matchingStatements[0].tranId,
+                        // transactionRemarks: item.matchingStatements[0].transactionRemarks,
+                    },
+                });
+
+                if (created) {
+                    console.log('New CombinedData instance created:', FeeFromLoanTrackerInstance.get());
+                } else {
+                    console.log('CombinedData instance already exists:', FeeFromLoanTrackerInstance.get());
+                }
+            }
+        }
+
+        console.log('Data saved to the database.');
+    } catch (error) {
+        console.error('Error saving data to the database:', error);
+        throw error;
+    }
+}
+
 router.get('/combined-data', async (req, res) => {
     try {
         const result = await Greayquest.findAll({
@@ -222,6 +285,8 @@ router.get('/combined-data', async (req, res) => {
         //     return resultItem;
         // });
 
+
+        saveCombinedDataToDatabase(data)
 
         res.json({ data });
     } catch (error) {

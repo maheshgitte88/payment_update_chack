@@ -86,24 +86,63 @@ router.post('/propelled-statement', upload.single('excelFile'), async (req, res)
 
 
 
+// async function saveCombinedDataToDatabase(data) {
+//     try {
+//         for (const item of data) {
+//             if (item.matchingStatements.length > 0) {
+//                 const [FeeFromLoanTrackerInstance, created] = await FeeFromLoanTracker.findOrCreate({
+//                     where: { utrNo: item.utrNo, tranId: item.matchingStatements[0].tranId },
+//                     defaults: {
+//                         date_of_Payment: item.dateOfDisbursement,
+//                         mode_of_payment: 'Loan',
+//                         MITSDE_Bank_Name: 'ICICI A/C 098505011038',
+//                         instrument_No: item.utrNo,
+//                         amount: item.matchingStatements[0].depositAmt,
+//                         clearance_Date: item.matchingStatements[0].transactionDate,
+//                         student_Name: item.borrowerName,
+//                         student_Email_ID: item.emailId,
+//                         finance_charges: item.subventionFinanceCharges,
+//                         Bank_tranId: item.matchingStatements[0].tranId,
+//                         transactionRemarks: item.matchingStatements[0].transactionRemarks,
+//                     },
+//                 });
+
+//                 if (created) {
+//                     console.log('New CombinedData instance created:', FeeFromLoanTrackerInstance.get());
+//                 } else {
+//                     console.log('CombinedData instance already exists:', FeeFromLoanTrackerInstance.get());
+//                 }
+//             }
+//         }
+
+//         console.log('Data saved to the database.');
+//     } catch (error) {
+//         console.error('Error saving data to the database:', error);
+//         throw error;
+//     }
+// }
+
 async function saveCombinedDataToDatabase(data) {
     try {
         for (const item of data) {
             if (item.matchingStatements.length > 0) {
+                console.log(item.utrNo, item.matchingStatements[0].tranId, 128);
+
                 const [FeeFromLoanTrackerInstance, created] = await FeeFromLoanTracker.findOrCreate({
-                    where: { utrNo: item.utrNo, tranId: item.matchingStatements[0].tranId },
+                    where: {Bank_tranId: item.matchingStatements[0].tranId },
                     defaults: {
                         date_of_Payment: item.dateOfDisbursement,
                         mode_of_payment: 'Loan',
                         MITSDE_Bank_Name: 'ICICI A/C 098505011038',
                         instrument_No: item.utrNo,
-                        amount: item.matchingStatements[0].depositAmt,
-                        clearance_Date: item.matchingStatements[0].transactionDate,
+                        amount: item.matchingStatements[0].depositAmt || null,
+                        clearance_Date: item.matchingStatements[0].transactionDate || null,
                         student_Name: item.borrowerName,
                         student_Email_ID: item.emailId,
+                        course_Name: item.courseName,
                         finance_charges: item.subventionFinanceCharges,
-                        Bank_tranId: item.matchingStatements[0].tranId,
-                        transactionRemarks: item.matchingStatements[0].transactionRemarks,
+                        Bank_tranId: item.matchingStatements[0].tranId || null,
+                        transactionRemarks: item.matchingStatements[0].transactionRemarks || null,
                     },
                 });
 
@@ -130,6 +169,7 @@ router.get('/propelled-combined-data', async (req, res) => {
                 'dateOfDisbursement',
                 'emailId',
                 'borrowerName',
+                'courseName',
                 'subventionFinanceCharges',
                 'utrNo'
             ]
@@ -152,13 +192,13 @@ router.get('/propelled-combined-data', async (req, res) => {
             return utrValues.includes(utrPart);
         });
 
-        const filteredStatementResults = statementResult.filter(item => {
-            const transactionRemarksMatch = item.transactionRemarks.match(/\/(\d+)\//);
-            return transactionRemarksMatch && utrValues.includes(transactionRemarksMatch[1]);
-        });
+        // const filteredStatementResults = statementResult.filter(item => {
+        //     const transactionRemarksMatch = item.transactionRemarks.match(/\/(\d+)\//);
+        //     return transactionRemarksMatch && utrValues.includes(transactionRemarksMatch[1]);
+        // });
 
         const data = result.map(propelledItem => {
-            const matchingStatements = filteredStatementResult.concat(filteredStatementResults)
+            const matchingStatements = filteredStatementResult
                 .filter(statementItem => statementItem.transactionRemarks.includes(propelledItem.utrNo));
             return {
                 ...propelledItem.dataValues,

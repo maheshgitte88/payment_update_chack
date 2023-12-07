@@ -31,9 +31,6 @@ const Greayquest = sequelize.define('Greayquest', {
     accountNumber: { type: DataTypes.STRING },
     bankName: { type: DataTypes.STRING },
     ifsc: { type: DataTypes.STRING },
-    utr: { type: DataTypes.STRING },
-
-
 });
 
 module.exports = Greayquest;

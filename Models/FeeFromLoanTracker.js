@@ -34,6 +34,10 @@ const FeeFromLoanTracker = sequelize.define('FeeFromLoanTracker', {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    course_Name:{
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
     finance_charges: {
         type: DataTypes.FLOAT,
         allowNull: true,
