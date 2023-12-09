@@ -398,7 +398,7 @@ router.get('/combined-data', async (req, res) => {
 
 
 
-async function saveCombinedDataToDatabase(data) {
+async function saveCombinedDataWithToDatabase(data) {
     try {
         for (const item of data) {
             if (item.matchingStatements.length > 0) {
@@ -482,7 +482,7 @@ router.get('/greaquest-only-data', async (req, res) => {
                 matchingStatements,
             };
         });
-        saveCombinedDataToDatabase(data)
+        saveCombinedDataWithToDatabase(data)
         res.json({ data });
     } catch (error) {
         console.error('Error fetching combined data:', error);

@@ -162,7 +162,7 @@ router.post('/propelled-statement', upload.single('excelFile'), async (req, res)
                         approvedOn: String(row.getCell(24).value) || null,
                         loanDocumentationDoneOn: String(row.getCell(25).value) || null,
                         disbursedAmount: parseFloat(row.getCell(26).value) || null,
-                        dateOfDisbursement: row.getCell(27).value || null,
+                        dateOfDisbursement: String(row.getCell(27).value) || null,
                         utrNo: String(row.getCell(28).value) || null,
                         nachType: String(row.getCell(29).value) || null,
                         borrowerROI: parseFloat(row.getCell(30).value) || null,
@@ -332,7 +332,7 @@ router.get('/propelled-combined-data', async (req, res) => {
 
 
 
-async function saveCombinedDataToDatabase(data) {
+async function saveCombinedDataWithICICToDatabase(data) {
     try {
         for (const item of data) {
             if (item.matchingStatements.length > 0) {
@@ -343,7 +343,7 @@ async function saveCombinedDataToDatabase(data) {
                     defaults: {
                         date_of_Payment: item.dateOfDisbursement,
                         mode_of_payment: 'Loan',
-                        MITSDE_Bank_Name: 'ICICI BANK LTD A/C 098505011038',
+                        MITSDE_Bank_Name: 'ICICI BANK LTD 098505011038',
                         instrument_No: item.utrNo,
                         amount: item.matchingStatements[0].depositAmt || null,
                         clearance_Date: item.matchingStatements[0].transactionDate || null,
@@ -411,14 +411,13 @@ router.get('/propelled-only-data', async (req, res) => {
                 matchingStatements,
             };
         });
-        saveCombinedDataToDatabase(data)
+        saveCombinedDataWithICICToDatabase(data)
         res.json({ data });
     } catch (error) {
         console.error('Error fetching combined data:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 
 
 
